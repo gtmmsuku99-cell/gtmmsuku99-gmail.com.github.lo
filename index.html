@@ -1,0 +1,121 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temwa Mobile Payments</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#172033}
+header{background:#073b30;color:white;padding:24px 18px;text-align:center}
+header h1{margin:0 0 8px}
+header p{margin:0;color:#d6f5e8}
+main{max-width:650px;margin:22px auto;padding:0 15px}
+.card{background:white;border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 3px 14px #0000000d}
+h2{margin-top:0;color:#073b30}
+input,select,button{width:100%;padding:13px;margin:8px 0;border:1px solid #ccd5df;border-radius:8px;font-size:16px}
+button{background:#087f5b;color:white;border:0;font-weight:bold;cursor:pointer}
+button:hover{background:#066448}
+.driver{border:1px solid #dbe4e9;border-radius:10px;padding:15px;margin-top:12px}
+.badge{display:inline-block;background:#e0f5e9;color:#087443;padding:5px 9px;border-radius:20px;font-size:12px}
+.fare{font-size:25px;font-weight:bold;margin:10px 0;color:#087f5b}
+.note{font-size:13px;color:#64748b;line-height:1.5}
+footer{text-align:center;padding:20px;color:#64748b;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h1>Temwa Mobile Payments</h1>
+<p>Simple and convenient minibus fare payments</p>
+</header><main>
+<section class="card">
+<h2>Find Your Minibus</h2>
+<p>Enter the vehicle registration number to find a driver.</p>
+<input id="plate" placeholder="Example: MZ 1234">
+<button onclick="searchDriver()">Search Vehicle</button>
+<div id="result"></div>
+</section><section class="card">
+<h2>For Drivers</h2>
+<p>Drivers will be able to register and receive payments through their supported mobile-money wallets.</p>
+<input id="driverName" placeholder="Driver's full name">
+<input id="driverPlate" placeholder="Vehicle registration number">
+<input id="driverPhone" placeholder="Mobile phone number">
+<select id="network">
+<option value="Airtel Money">Airtel Money</option>
+<option value="TNM Mpamba">TNM Mpamba</option>
+</select>
+<button onclick="registerDriver()">Register Demo Driver</button>
+<p class="note">Demo registration saves information in this browser only. It does not create a secure account or verify a driver.</p>
+</section><section class="card">
+<h2>Administrator — Demo Fare Settings</h2>
+<label>Set demonstration fare (MWK)</label>
+<input id="fare" type="number" min="0" value="1000">
+<button onclick="saveFare()">Update Demo Fare</button>
+<p class="note">This demonstration setting is stored in this browser only. A live website needs secure administrator authentication and a shared database.</p>
+</section><section class="card">
+<h2>Important Notice</h2>
+<p class="note">This is an early demonstration of Temwa Mobile Payments. No real money is collected or transferred. Airtel Money and TNM Mpamba payments require an approved payment integration and verified payment confirmations.</p>
+</section>
+</main><footer>Temwa Mobile Payments · Malawi</footer><script>
+let drivers = JSON.parse(localStorage.getItem("temwaDemoDrivers") || "[]");
+let fare = Number(localStorage.getItem("temwaDemoFare") || 1000);
+
+document.getElementById("fare").value = fare;
+
+function searchDriver(){
+ const plate = document.getElementById("plate").value.trim().toUpperCase();
+ const result = document.getElementById("result");
+ if(!plate){result.innerHTML="<p>Enter a vehicle registration number.</p>";return}
+ const driver = drivers.find(d=>d.plate.toUpperCase()===plate);
+ if(!driver){
+  result.innerHTML="<p>No demonstration driver found for that registration number.</p>";
+  return;
+ }
+ result.innerHTML=`
+ <div class="driver">
+ <span class="badge">Demo listing — unverified</span>
+ <h3>${escapeText(driver.name)}</h3>
+ <p>Vehicle: ${escapeText(driver.plate)}</p>
+ <p>Contact: ${escapeText(driver.phone)}</p>
+ <p>Preferred network: ${escapeText(driver.network)}</p>
+ <div class="fare">MWK ${fare.toLocaleString()}</div>
+ <label>Payment network</label>
+ <select id="paymentNetwork">
+ <option>Airtel Money</option>
+ <option>TNM Mpamba</option>
+ </select>
+ <button onclick="demoPayment()">Continue (Demo Only)</button>
+ </div>`;
+}
+
+function registerDriver(){
+ const name=document.getElementById("driverName").value.trim();
+ const plate=document.getElementById("driverPlate").value.trim().toUpperCase();
+ const phone=document.getElementById("driverPhone").value.trim();
+ const network=document.getElementById("network").value;
+ if(!name||!plate||!phone){alert("Please fill in all fields.");return}
+ drivers=drivers.filter(d=>d.plate.toUpperCase()!==plate);
+ drivers.push({name,plate,phone,network});
+ localStorage.setItem("temwaDemoDrivers",JSON.stringify(drivers));
+ alert("Demo driver saved in this browser. This is not a verified account.");
+ document.getElementById("driverName").value="";
+ document.getElementById("driverPlate").value="";
+ document.getElementById("driverPhone").value="";
+}
+
+function saveFare(){
+ const value=Number(document.getElementById("fare").value);
+ if(!Number.isFinite(value)||value<0){alert("Enter a valid fare.");return}
+ fare=value;
+ localStorage.setItem("temwaDemoFare",String(fare));
+ alert("Demo fare updated in this browser.");
+}
+
+function demoPayment(){
+ alert("Demo only: no payment request was sent and no money was transferred. Live payment integration is not configured.");
+}
+
+function escapeText(value){
+ return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+</script></body>
+</html>
